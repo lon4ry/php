@@ -1,0 +1,49 @@
+services:
+  captcha:
+    build: ./docker/php
+    image: php-course-web
+    ports:
+      - "8080:80"
+    volumes:
+      - ./02-captcha:/var/www/html
+
+  eshop:
+    image: php-course-web
+    ports:
+      - "8081:80"
+    volumes:
+      - ./03-eshop:/var/www/html
+    environment:
+      DB_HOST: db
+      DB_USER: root
+      DB_PASS: secret
+      DB_NAME: eshop
+    depends_on:
+      captcha:
+        condition: service_started
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+    volumes:
+      - ./03-eshop/core/eshop.sql:/docker-entrypoint-initdb.d/eshop.sql:ro
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-psecret"]
+      interval: 5s
+      retries: 20
+
+  cli:
+    image: php:8.3-cli
+    profiles: ["cli"]
+    working_dir: /app
+    volumes:
+      - .:/app
+    stdin_open: true
+    tty: true
+
+volumes:
+  db-data:

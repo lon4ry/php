@@ -1,0 +1,14 @@
+# Blueprint для Render: CAPTCHA на бесплатном тарифе
+services:
+  - type: web
+    name: php-captcha
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./docker/captcha/Dockerfile
+    dockerContext: .
+    healthCheckPath: /index.php
+    autoDeployTrigger: commit
+    envVars:
+      - key: PORT
+        value: "80"
